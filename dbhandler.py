@@ -18,11 +18,19 @@ def format_key(phone_number):
     return f"chat_{phone_number}"
 
 def serialize_message(message):
-    return json.dumps(message)
+    return {
+        "role": message["role"],
+        "content": message["content"]
+    }
 
 def deserialize_message(message_json):
-    return json.loads(message_json)
+    message = json.loads(message_json)
+    return {
+        "role": message["role"],
+        "content": message["content"]
+    }
 
+  
 # Updated functions
 
 def get_database_connection():
@@ -43,30 +51,42 @@ def get_messages_from_db(phone_number):
     if db_type == 'replit':
         key = format_key(phone_number)
         if key in db:
-            messages = [deserialize_message(message_json) for message_json in db[key]]
-        else:
             messages = []
+            for message in db[key]:
+                if isinstance(message, str):
+                    messages.append(json.loads(message))
+                elif isinstance(message, dict):
+                    messages.append(dict(message))
+            return messages
+        else:
+            return []
     else:
         connection = get_database_connection()
         cursor = connection.cursor()
 
-        cursor.execute(f"SELECT Role, Message FROM chat WHERE `From` = '{phone_number}' OR `To` = '{phone_number}' ORDER BY DateTime ASC;")
-        messages = [{"role": row[0], "content": row[1]} for row in cursor.fetchall()]
+        cursor.execute("SELECT `From`, `To`, Role, Message FROM chat WHERE `From`=%s OR `To`=%s ORDER BY DateTime;",
+                       (phone_number, phone_number))
+        result = cursor.fetchall()
+
+        messages = [{"role": row[2], "content": row[3]} for row in result]
 
         cursor.close()
         connection.close()
 
-    return messages
+        return messages
+
 
 def insert_message_to_db(from_number, to_number, role, message):
     if db_type == 'replit':
         key = format_key(from_number)
-        message_json = serialize_message({"role": role, "content": message, "timestamp": datetime.now().isoformat()})
+        message_obj = {"role": role, "content": message, "timestamp": datetime.now().isoformat()}
 
         if key in db:
-            db[key] = db[key] + [message_json]
+            messages = db[key]
+            messages.append(message_obj)
+            db[key] = messages
         else:
-            db[key] = [message_json]
+            db[key] = [message_obj]
     else:
         connection = get_database_connection()
         cursor = connection.cursor()
@@ -77,3 +97,4 @@ def insert_message_to_db(from_number, to_number, role, message):
 
         cursor.close()
         connection.close()
+

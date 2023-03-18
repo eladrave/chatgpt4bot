@@ -28,3 +28,16 @@ your_database_name: The name of your MySQL or PostgreSQL database (not needed fo
 your_database_port: The port number for your MySQL or PostgreSQL database (not needed for Replit DB).
 ```
 Save this template as .env in the same directory as your main.py and dbhandler.py files. The application will automatically load the environment variables from the .env file.
+
+You can use replitdb_manager.py in order to clear and display the content of ReplitDB
+
+usage: replitdb_manager.py [-h] [--clear]
+                           [--display]
+```
+Replit DB Manager
+
+options:
+  -h, --help  show this help message and exit
+  --clear     Clear the Replit DB
+  --display   Display the Replit DB contents
+  ```
