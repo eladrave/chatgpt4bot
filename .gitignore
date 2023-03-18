@@ -5,3 +5,4 @@ poetry.lock
 pyproject.toml
 replit.nix
 .env
+__pycache__
