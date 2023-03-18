@@ -3,23 +3,23 @@
     "dbhandler.py": [
       {
         "id": "3cbe7da1-a3f2-47d4-a7c8-189f3287338f",
-        "line": 81,
-        "version": 19,
-        "index": 2306
+        "line": 1,
+        "version": 52,
+        "index": 0
       }
     ],
     "main.py": [
       {
         "id": "d2c6a39c-181e-4811-84d7-6eeee403e168",
         "line": 29,
-        "version": 72,
+        "version": 82,
         "index": 766
       },
       {
         "id": "e15cef2e-5906-43bd-9cfe-8fe6cb49bce3",
-        "line": 45,
-        "version": 72,
-        "index": 1146
+        "line": 36,
+        "version": 82,
+        "index": 1051
       }
     ]
   }
