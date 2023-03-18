@@ -99,28 +99,6 @@ def insert_message_to_db(from_number, to_number, role, message):
                            (from_number, to_number, role, message))
         else:
             cursor.execute("INSERT INTO chat (DateTime, `From`, `To`, Role, Message) VALUES (NOW(), %s, %s, %s, %s);",
-                           (from_number, to
-
-def insert_message_to_db(from_number, to_number, role, message):
-    if db_type == 'replit':
-        key = format_key(from_number)
-        message_obj = {"role": role, "content": message, "timestamp": datetime.now().isoformat()}
-
-        if key in db:
-            messages = db[key]
-            messages.append(message_obj)
-            db[key] = messages
-        else:
-            db[key] = [message_obj]
-    else:
-        connection = get_database_connection()
-        cursor = connection.cursor()
-
-        if db_type == 'sqlite':
-            cursor.execute("INSERT INTO chat (DateTime, `From`, `To`, Role, Message) VALUES (datetime('now'), ?, ?, ?, ?);",
-                           (from_number, to_number, role, message))
-        else:
-            cursor.execute("INSERT INTO chat (DateTime, `From`, `To`, Role, Message) VALUES (NOW(), %s, %s, %s, %s);",
                            (from_number, to_number, role, message))
         
         connection.commit()
