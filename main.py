@@ -27,17 +27,8 @@ def wachat():
   user_message = request.form.get('Body')
 
   messages = get_messages_from_db(user_phone)
-  if not messages:
-    messages = [
-      {
-        "role": "system",
-        "content": initial_prompt
-      },
-      {
-        "role": "user",
-        "content": ""
-      },
-    ]
+  if not len(messages):
+    messages = [{"role": "system", "content": initial_prompt}]
 
   # Remove the 'timestamp' field from messages before sending to the API
   for message in messages:

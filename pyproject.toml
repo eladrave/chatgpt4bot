@@ -6,6 +6,10 @@ authors = ["Replit user <<>>"]
 
 [tool.poetry.dependencies]
 python = "^3.10"
+Flask = "^2.2.3"
+openai = "^0.27.2"
+python-dotenv = "^1.0.0"
+twilio = "^7.16.5"
 
 [tool.poetry.dev-dependencies]
 
