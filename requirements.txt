@@ -1,0 +1,11 @@
+mysql-connector-python
+protobuf
+python-dotenv
+requests
+sqlalchemy
+twilio
+promptlayer
+psycopg2-binary
+replit
+langchain
+soundfile

@@ -87,22 +87,26 @@ def wachat():
 
     if not len(messages):
         messages = [{"role": "system", "content": initial_prompt}]
+        insert_message_to_db(user_phone, twilio_phone_number, "system", initial_prompt)
 
     # Remove the 'timestamp' field from messages before sending to the API
     for message in messages:
         message.pop('timestamp', None)
     insert_message_to_db(user_phone, twilio_phone_number, "user", user_message)
 
+    messages.append({"role": "user", "content": user_message})
+
     logging.info(f"Messages after user input: {messages}")
 
-    messages = [{k: v for k, v in msg.items()} for msg in messages]
+    #messages = [{k: v for k, v in msg.items()} for msg in messages]
 
     response = openai.ChatCompletion.create(model=model, messages=messages)
 
     assistant_message = response.choices[0].message.content
     insert_message_to_db(twilio_phone_number, user_phone, "assistant",
                          assistant_message)
-
+    
+    messages.append({"role": "assistant", "content": assistant_message})
     logging.info(f"Messages after assistant response: {messages}")
 
     twilio_response = MessagingResponse()
