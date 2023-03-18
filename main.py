@@ -11,6 +11,9 @@ import io
 import tempfile
 from typing import Tuple
 import soundfile as sf
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 promptlayer.api_key = os.environ['PROMPTLAYER_API_KEY']
 openai = promptlayer.openai
@@ -65,41 +68,48 @@ def handle_document(url: str):
 
 @app.route('/wachat', methods=['POST'])
 def wachat():
-  user_phone = request.form.get('From')
-  user_name = request.form.get('ProfileName')
-  user_message = request.form.get('Body')
-  media_url = request.form.get('MediaUrl0')
-  media_type = request.form.get('MediaContentType0')
+    user_phone = request.form.get('From')
+    user_name = request.form.get('ProfileName')
+    user_message = request.form.get('Body')
+    media_url = request.form.get('MediaUrl0')
+    media_type = request.form.get('MediaContentType0')
 
-  if media_url:
-    if media_type.startswith('audio'):
-      user_message = handle_audio(media_url)
-    elif media_type.startswith('image'):
-      handle_image(media_url)
-    elif media_type.startswith('application'):
-      handle_document(media_url)
+    if media_url:
+        if media_type.startswith('audio'):
+            user_message = handle_audio(media_url)
+        elif media_type.startswith('image'):
+            handle_image(media_url)
+        elif media_type.startswith('application'):
+            handle_document(media_url)
 
-  messages = get_messages_from_db(user_phone)
-  if not len(messages):
-    messages = [{"role": "system", "content": initial_prompt}]
+    messages = get_messages_from_db(user_phone)
+    logging.info(f"Messages from DB: {messages}")
 
-  # Remove the 'timestamp' field from messages before sending to the API
-  for message in messages:
-    message.pop('timestamp', None)
-  insert_message_to_db(user_phone, twilio_phone_number, "user", user_message)
+    if not len(messages):
+        messages = [{"role": "system", "content": initial_prompt}]
 
-  messages = [{k: v for k, v in msg.items()} for msg in messages]
+    # Remove the 'timestamp' field from messages before sending to the API
+    for message in messages:
+        message.pop('timestamp', None)
+    insert_message_to_db(user_phone, twilio_phone_number, "user", user_message)
 
-  response = openai.ChatCompletion.create(model=model, messages=messages)
+    logging.info(f"Messages after user input: {messages}")
 
-  assistant_message = response.choices[0].message.content
-  insert_message_to_db(twilio_phone_number, user_phone, "assistant",
-                       assistant_message)
+    messages = [{k: v for k, v in msg.items()} for msg in messages]
 
-  twilio_response = MessagingResponse()
-  twilio_response.message(assistant_message)
+    response = openai.ChatCompletion.create(model=model, messages=messages)
 
-  return str(twilio_response)
+    assistant_message = response.choices[0].message.content
+    insert_message_to_db(twilio_phone_number, user_phone, "assistant",
+                         assistant_message)
+
+    logging.info(f"Messages after assistant response: {messages}")
+
+    twilio_response = MessagingResponse()
+    twilio_response.message(assistant_message)
+
+    return str(twilio_response)
+
 
 
 if __name__ == '__main__':
