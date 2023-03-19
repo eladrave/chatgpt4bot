@@ -6,3 +6,4 @@ pyproject.toml
 replit.nix
 .env
 __pycache__
+sqlite.db

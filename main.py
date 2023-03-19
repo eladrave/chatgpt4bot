@@ -135,6 +135,7 @@ def wachat():
 
   if image_url is not None:
     twilio_response.message(oai_response).media(image_url)
+    # Do i need to store this as systme message?
   else:
     twilio_response.message(oai_response)
 
@@ -142,10 +143,10 @@ def wachat():
                        oai_response)
   messages.append({"role": "assistant", "content": oai_response})
 
-  twilio_response.message(oai_response)
+  #twilio_response.message(oai_response)
 
   return str(twilio_response)
 
 
 if __name__ == '__main__':
-  app.run("0.0.0.0")
+  app.run("0.0.0.0", port=8000)
