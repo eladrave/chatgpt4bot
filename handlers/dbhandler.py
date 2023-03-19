@@ -90,3 +90,28 @@ def insert_message_to_db(from_number, to_number, role, message):
 
     cursor.close()
     connection.close()
+
+# ... (previous code)
+
+def load_config_from_db(from_number, to_number):
+    connection = get_database_connection()
+    cursor = connection.cursor()
+
+    if db_type == 'sqlite':
+        cursor.execute(
+            "SELECT ConfigKey, ConfigValue FROM config WHERE `From`=? AND `To`=?;",
+            (from_number, to_number))
+    else:
+        cursor.execute(
+            "SELECT ConfigKey, ConfigValue FROM config WHERE `From`=%s AND `To`=%s;",
+            (from_number, to_number))
+
+    result = cursor.fetchall()
+    config_dict = {row[0]: row[1] for row in result}
+
+    cursor.close()
+    connection.close()
+
+    return config_dict
+
+# ... (rest of the code)
