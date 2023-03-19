@@ -5,6 +5,7 @@ import mysql.connector
 import psycopg2
 import sqlite3
 from handlers.confighandler import config
+from typing import Dict, List
 
 db_type = config.DB_TYPE
 db_user = config.DB_USER
@@ -91,7 +92,7 @@ def insert_message_to_db(from_number, to_number, role, message):
     cursor.close()
     connection.close()
 
-# ... (previous code)
+
 
 def load_config_from_db(from_number, to_number):
     connection = get_database_connection()
@@ -114,4 +115,43 @@ def load_config_from_db(from_number, to_number):
 
     return config_dict
 
-# ... (rest of the code)
+def store_embedding_in_db(user_phone: str, text: str, embedding: Dict[str, float]) -> None:
+    conn = sqlite3.connect(config.DB_PATH)
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "INSERT INTO embeddings (user_phone, text, embedding) VALUES (?, ?, ?)",
+        (user_phone, text, json.dumps(embedding)),
+    )
+
+    conn.commit()
+    conn.close()
+
+def get_embeddings_from_db(user_phone: str) -> List[Dict[str, float]]:
+    conn = sqlite3.connect(config.DB_PATH)
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "SELECT text, embedding FROM embeddings WHERE user_phone = ?", (user_phone,)
+    )
+
+    embeddings = [
+        {"text": text, "embedding": json.loads(embedding_str)}
+        for text, embedding_str in cursor.fetchall()
+    ]
+
+    conn.close()
+    return embeddings
+
+def save_config_to_db(key: str, value: str) -> None:
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute(
+        "INSERT OR REPLACE INTO config (key, value) VALUES (?, ?)",
+        (key, value)
+    )
+    
+    conn.commit()
+    cursor.close()
+    conn.close()

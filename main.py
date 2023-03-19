@@ -14,6 +14,10 @@ import soundfile as sf
 import logging
 from handlers.imagehandler import handle_img
 from handlers.confighandler import config
+from handlers.embeddinghandler import embed_text, find_similar_text, store_embedding, get_embeddings
+from handlers.commandhandler import handle_command
+
+
 
 
 logging.basicConfig(level=logging.INFO)
@@ -101,60 +105,62 @@ def process_openai_response(response_text):
 
 @app.route('/wachat', methods=['POST'])
 def wachat():
-  user_phone = request.form.get('From')
-  user_name = request.form.get('ProfileName')
-  user_message = request.form.get('Body')
-  media_url = request.form.get('MediaUrl0')
-  media_type = request.form.get('MediaContentType0')
+    user_phone = request.form.get('From')
+    user_name = request.form.get('ProfileName')
+    user_message = request.form.get('Body')
+    media_url = request.form.get('MediaUrl0')
+    media_type = request.form.get('MediaContentType0')
 
-  if media_url:
-    if media_type.startswith('audio'):
-      user_message = handle_audio(media_url)
-    elif media_type.startswith('image'):
-      handle_image(media_url)
-    elif media_type.startswith('application'):
-      handle_document(media_url)
+    image_url = None
+    messages = []
+  
+    if media_url:
+        if media_type.startswith('audio'):
+            user_message = handle_audio(media_url)
+        elif media_type.startswith('image'):
+            handle_image(media_url)
+        elif media_type.startswith('application'):
+            handle_document(media_url)
 
-  messages = get_messages_from_db(user_phone)
-  logging.info(f"Messages from DB: {messages}")
+    if user_message.startswith("/"):
+        oai_response = handle_command(user_phone, user_message)
+    else:
+        messages = get_messages_from_db(user_phone)
+        logging.info(f"Messages from DB: {messages}")
 
-  if not len(messages):
-    messages = [{"role": "system", "content": initial_prompt}]
-    insert_message_to_db(user_phone, twilio_phone_number, "system",
-                         initial_prompt)
+        if not len(messages):
+            messages = [{"role": "system", "content": initial_prompt}]
+            insert_message_to_db(user_phone, twilio_phone_number, "system",
+                                 initial_prompt)
 
-  # Remove the 'timestamp' field from messages before sending to the API
-  for message in messages:
-    message.pop('timestamp', None)
-  insert_message_to_db(user_phone, twilio_phone_number, "user", user_message)
+        # Remove the 'timestamp' field from messages before sending to the API
+        for message in messages:
+            message.pop('timestamp', None)
+        insert_message_to_db(user_phone, twilio_phone_number, "user", user_message)
 
-  messages.append({"role": "user", "content": user_message})
+        messages.append({"role": "user", "content": user_message})
 
-  logging.info(f"Messages after user input: {messages}")
+        logging.info(f"Messages after user input: {messages}")
 
-  #messages = [{k: v for k, v in msg.items()} for msg in messages]
+        response = openai.ChatCompletion.create(model=model, messages=messages)
 
-  response = openai.ChatCompletion.create(model=model, messages=messages)
+        assistant_message = response.choices[0].message.content
+        oai_response, image_url = process_openai_response(assistant_message)
 
-  assistant_message = response.choices[0].message.content
-  oai_response, image_url = process_openai_response(assistant_message)
+    twilio_response = MessagingResponse()
 
-  twilio_response = MessagingResponse()
+    if image_url is not None:
+        twilio_response.message(oai_response).media(image_url)
+    else:
+        twilio_response.message(oai_response)
 
-  if image_url is not None:
-    twilio_response.message(oai_response).media(image_url)
-    # Do i need to store this as systme message?
-  else:
-    twilio_response.message(oai_response)
+    insert_message_to_db(user_phone, twilio_phone_number, "assistant",
+                         oai_response)
+    messages.append({"role": "assistant", "content": oai_response})
 
-  insert_message_to_db(user_phone, twilio_phone_number, "assistant",
-                       oai_response)
-  messages.append({"role": "assistant", "content": oai_response})
-
-  #twilio_response.message(oai_response)
-
-  return str(twilio_response)
+    return str(twilio_response)
 
 
 if __name__ == '__main__':
-  app.run("0.0.0.0", port=8000)
+    app.run("0.0.0.0", port=8000)
+

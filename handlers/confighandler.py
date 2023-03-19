@@ -1,11 +1,12 @@
 import os
 
 
+
 class ConfigHandler:
     def __init__(self, from_number=None, to_number=None):
         config_from_db = None
         if from_number and to_number:
-            from handlers.dbhandler import load_config_from_db  # Move import here
+            from handlers.dbhandler import load_config_from_db, save_config_to_db
             config_from_db = load_config_from_db(from_number, to_number)
 
 
@@ -22,4 +23,21 @@ class ConfigHandler:
         self.DB_PORT = config_from_db.get('DB_PORT', os.environ.get('DB_PORT')) if config_from_db else os.environ.get('DB_PORT')
         self.DB_PATH = config_from_db.get('DB_PATH', os.environ.get('DB_PATH')) if config_from_db else os.environ.get('DB_PATH')
 
+def update_config(self, key, value):
+        if hasattr(self, key):
+            setattr(self, key, value)
+            return f"Config '{key}' has been updated to '{value}'."
+        else:
+            return f"Invalid config key '{key}'."
+          
+def update_config(self, key, value, persistent=False):
+        if hasattr(self, key):
+            setattr(self, key, value)
+            if persistent:
+                save_config_to_db(key, value)
+            return f"Config '{key}' has been updated to '{value}'."
+        else:
+            return f"Invalid config key '{key}'."
+
+          
 config = ConfigHandler()

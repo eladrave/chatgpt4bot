@@ -1,5 +1,6 @@
 import os
-import dbhandler
+import handlers.dbhandler as dbhandler
+import numpy as np
 
 
 def clear_database():
@@ -44,9 +45,30 @@ def display_database():
     for row in result:
       print(f"{row[0]}, {row[1]}, {row[2]}, {row[3]}, {row[4]}")
 
+    #cursor.close()
+
+    cursor.execute("SELECT * FROM embeddings;")
+    result = cursor.fetchall()
+
+    print("Database contents:")
+    for row in result:
+      print(f"{row[0]}, {row[1]}")
+
     cursor.close()
     connection.close()
 
+def display_embeddings():
+    connection = dbhandler.get_database_connection()
+    cursor = connection.cursor()
+
+    cursor.execute("SELECT user_phone, text, embedding FROM embeddings")
+    results = cursor.fetchall()
+
+    for phone, text, embedding_str in results:
+        embedding = np.fromstring(embedding_str, sep=',')
+        print(f"Phone: {phone}, Text: {text}, Embedding: {embedding}")
+
+    connection.close()
 
 if __name__ == "__main__":
   import argparse
@@ -57,6 +79,9 @@ if __name__ == "__main__":
   parser.add_argument('--display',
                       action='store_true',
                       help="Display the database contents")
+  parser.add_argument('--embedding',
+                      action='store_true',
+                      help="Display the embedding contents")
 
   args = parser.parse_args()
 
@@ -64,5 +89,7 @@ if __name__ == "__main__":
     clear_database()
   elif args.display:
     display_database()
+  elif args.embedding:
+    display_embeddings()
   else:
     parser.print_help()
