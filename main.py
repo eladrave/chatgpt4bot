@@ -4,7 +4,7 @@ import sys
 from dotenv import load_dotenv
 from flask import Flask, request, jsonify
 from twilio.twiml.messaging_response import MessagingResponse
-from dbhandler import get_messages_from_db, insert_message_to_db
+from handlers.dbhandler import get_messages_from_db, insert_message_to_db
 import promptlayer
 import requests
 import io
@@ -13,21 +13,29 @@ from typing import Tuple
 import soundfile as sf
 import logging
 from handlers.imagehandler import handle_img
+from handlers.confighandler import config
+
 
 logging.basicConfig(level=logging.INFO)
 
-promptlayer.api_key = os.environ['PROMPTLAYER_API_KEY']
+promptlayer.api_key = config.PROMPTLAYER_API_KEY #os.environ['PROMPTLAYER_API_KEY']
 openai = promptlayer.openai
 
 load_dotenv()
 app = Flask(__name__)
 app.debug = True
 
+openai.api_key = config.OPENAI_API_KEY
+model = config.OPENAI_API_MODEL
+initial_prompt = config.INITIAL_PROMPT
+twilio_phone_number = config.TWILIO_PHONE_NUMBER
+
+'''
 openai.api_key = os.environ['OPENAI_API_KEY']
 model = os.environ['OPENAI_API_MODEL']
 initial_prompt = os.environ['INITIAL_PROMPT']
 twilio_phone_number = os.environ['TWILIO_PHONE_NUMBER']
-
+'''
 
 def download_media(url: str) -> Tuple[str, io.BytesIO]:
   response = requests.get(url)
@@ -140,7 +148,7 @@ def wachat():
   else:
     twilio_response.message(oai_response)
 
-  insert_message_to_db(twilio_phone_number, user_phone, "assistant",
+  insert_message_to_db(user_phone, twilio_phone_number, "assistant",
                        oai_response)
   messages.append({"role": "assistant", "content": oai_response})
 

@@ -1,7 +1,8 @@
 import os
 import openai
+from handlers.confighandler import config
 
-openai.api_key = os.getenv("OPENAI_API_KEY")
+openai.api_key = config.OPENAI_API_KEY
 
 def handle_img(img_prompt):
     image_response = openai.Image.create(

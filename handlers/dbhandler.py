@@ -4,14 +4,15 @@ from datetime import datetime
 import mysql.connector
 import psycopg2
 import sqlite3
+from handlers.confighandler import config
 
-db_type = os.environ['DB_TYPE']
-db_user = os.environ.get('DB_USER')
-db_password = os.environ.get('DB_PASSWORD')
-db_host = os.environ.get('DB_HOST')
-db_name = os.environ.get('DB_NAME')
-db_port = os.environ.get('DB_PORT')
-db_path = os.environ.get('DB_PATH')
+db_type = config.DB_TYPE
+db_user = config.DB_USER
+db_password = config.DB_PASSWORD
+db_host = config.DB_HOST
+db_name = config.DB_NAME
+db_port = config.DB_PORT
+db_path = config.DB_PATH
 
 
 def format_key(phone_number):
@@ -89,3 +90,28 @@ def insert_message_to_db(from_number, to_number, role, message):
 
     cursor.close()
     connection.close()
+
+# ... (previous code)
+
+def load_config_from_db(from_number, to_number):
+    connection = get_database_connection()
+    cursor = connection.cursor()
+
+    if db_type == 'sqlite':
+        cursor.execute(
+            "SELECT ConfigKey, ConfigValue FROM config WHERE `From`=? AND `To`=?;",
+            (from_number, to_number))
+    else:
+        cursor.execute(
+            "SELECT ConfigKey, ConfigValue FROM config WHERE `From`=%s AND `To`=%s;",
+            (from_number, to_number))
+
+    result = cursor.fetchall()
+    config_dict = {row[0]: row[1] for row in result}
+
+    cursor.close()
+    connection.close()
+
+    return config_dict
+
+# ... (rest of the code)
