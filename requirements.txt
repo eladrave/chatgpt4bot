@@ -9,3 +9,5 @@ psycopg2-binary
 replit
 langchain
 soundfile
+openai
+python-dotenv

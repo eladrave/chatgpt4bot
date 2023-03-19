@@ -4,7 +4,6 @@ from datetime import datetime
 import mysql.connector
 import psycopg2
 import sqlite3
-from replit import db
 
 db_type = os.environ['DB_TYPE']
 db_user = os.environ.get('DB_USER')
@@ -43,8 +42,6 @@ def get_database_connection():
                             port=db_port)
   elif db_type == 'sqlite':
     return sqlite3.connect(db_path)
-  elif db_type == 'replit':
-    return None
   else:
     raise ValueError(
       "Invalid database type. Please set the 'DB_TYPE' environment variable to 'mysql', 'postgres', 'sqlite', or 'replit'."
@@ -52,19 +49,6 @@ def get_database_connection():
 
 
 def get_messages_from_db(phone_number):
-  if db_type == 'replit':
-    key = format_key(phone_number)
-    if key in db:
-      messages = []
-      for message in db[key]:
-        if isinstance(message, str):
-          messages.append(json.loads(message))
-        elif isinstance(message, dict):
-          messages.append(dict(message))
-      return messages
-    else:
-      return []
-  else:
     connection = get_database_connection()
     cursor = connection.cursor()
 
@@ -88,21 +72,7 @@ def get_messages_from_db(phone_number):
 
 
 def insert_message_to_db(from_number, to_number, role, message):
-  if db_type == 'replit':
-    key = format_key(from_number)
-    message_obj = {
-      "role": role,
-      "content": message,
-      "timestamp": datetime.now().isoformat()
-    }
-
-    if key in db:
-      messages = db[key]
-      messages.append(message_obj)
-      db[key] = messages
-    else:
-      db[key] = [message_obj]
-  else:
+  
     connection = get_database_connection()
     cursor = connection.cursor()
 
