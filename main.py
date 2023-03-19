@@ -13,22 +13,29 @@ from typing import Tuple
 import soundfile as sf
 import logging
 from handlers.imagehandler import handle_img
+from handlers.confighandler import config
 
 
 logging.basicConfig(level=logging.INFO)
 
-promptlayer.api_key = os.environ['PROMPTLAYER_API_KEY']
+promptlayer.api_key = config.PROMPTLAYER_API_KEY #os.environ['PROMPTLAYER_API_KEY']
 openai = promptlayer.openai
 
 load_dotenv()
 app = Flask(__name__)
 app.debug = True
 
+openai.api_key = config.OPENAI_API_KEY
+model = config.OPENAI_API_MODEL
+initial_prompt = config.INITIAL_PROMPT
+twilio_phone_number = config.TWILIO_PHONE_NUMBER
+
+'''
 openai.api_key = os.environ['OPENAI_API_KEY']
 model = os.environ['OPENAI_API_MODEL']
 initial_prompt = os.environ['INITIAL_PROMPT']
 twilio_phone_number = os.environ['TWILIO_PHONE_NUMBER']
-
+'''
 
 def download_media(url: str) -> Tuple[str, io.BytesIO]:
   response = requests.get(url)
