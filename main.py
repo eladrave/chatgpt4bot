@@ -98,6 +98,7 @@ def wachat():
   user_message = request.form.get('Body')
   media_url = request.form.get('MediaUrl0')
   media_type = request.form.get('MediaContentType0')
+  whatsapp_number = request.form.get('To')
 
   if media_url:
     if media_type.startswith('audio'):
