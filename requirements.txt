@@ -6,8 +6,14 @@ sqlalchemy
 twilio
 promptlayer
 psycopg2-binary
-replit
 langchain
 soundfile
 openai
 python-dotenv
+numpy
+matplotlib
+plotly
+pandas
+scipy
+sklearn
+scikit-learn

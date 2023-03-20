@@ -7,3 +7,5 @@ replit.nix
 .env
 __pycache__
 sqlite.db
+embedded_1k_reviews.csv
+sqlite.db

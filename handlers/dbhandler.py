@@ -6,6 +6,8 @@ import psycopg2
 import sqlite3
 from handlers.confighandler import config
 from typing import Dict, List
+import numpy as np
+
 
 db_type = config.DB_TYPE
 db_user = config.DB_USER
@@ -54,23 +56,18 @@ def get_messages_from_db(phone_number):
     connection = get_database_connection()
     cursor = connection.cursor()
 
-    if db_type == 'sqlite':
-      cursor.execute(
-        "SELECT `From`, `To`, Role, Message FROM chat WHERE `From`=? OR `To`=? ORDER BY DateTime;",
-        (phone_number, phone_number))
-    else:
-      cursor.execute(
-        "SELECT `From`, `To`, Role, Message FROM chat WHERE `From`=%s OR `To`=%s ORDER BY DateTime;",
-        (phone_number, phone_number))
+    cursor.execute(
+        "SELECT text, embedding FROM embeddings WHERE user_phone = ?", (phone_number,)
+    )
 
-    result = cursor.fetchall()
+    # Retrieve the embeddings as numpy arrays
+    embeddings = [
+        (text, np.frombuffer(embedding_binary, dtype=np.float64))
+        for text, embedding_binary in cursor.fetchall()
+    ]
 
-    messages = [{"role": row[2], "content": row[3]} for row in result]
-
-    cursor.close()
     connection.close()
-
-    return messages
+    return embeddings
 
 
 def insert_message_to_db(from_number, to_number, role, message):
@@ -115,36 +112,44 @@ def load_config_from_db(from_number, to_number):
 
     return config_dict
 
-def store_embedding_in_db(user_phone: str, text: str, embedding: Dict[str, float]) -> None:
+def store_embedding_in_db(user_phone: str, text: str, embedding: List[float]) -> None:
     conn = sqlite3.connect(config.DB_PATH)
     cursor = conn.cursor()
 
+    embedding_array = np.array(embedding)  # Convert the list to a NumPy array
+    embedding_binary = embedding_array.tobytes()  # Call 'tobytes' on the NumPy array
+
     cursor.execute(
         "INSERT INTO embeddings (user_phone, text, embedding) VALUES (?, ?, ?)",
-        (user_phone, text, json.dumps(embedding)),
+        (user_phone, text, embedding_binary),
     )
 
     conn.commit()
     conn.close()
 
+    print(f"Stored embedding for '{text}' in the database")
+
 def get_embeddings_from_db(user_phone: str) -> List[Dict[str, float]]:
-    conn = sqlite3.connect(config.DB_PATH)
+    conn = get_database_connection()
     cursor = conn.cursor()
 
     cursor.execute(
         "SELECT text, embedding FROM embeddings WHERE user_phone = ?", (user_phone,)
     )
 
-    embeddings = [
-        {"text": text, "embedding": json.loads(embedding_str)}
-        for text, embedding_str in cursor.fetchall()
-    ]
+    fetched_data = cursor.fetchall()
+    print("Fetched data from DB:", fetched_data)
 
+    embeddings = [
+        {"text": text, "embedding": np.frombuffer(embedding_binary, dtype=np.float64)}
+        for text, embedding_binary in fetched_data
+    ]
+    print(embeddings)
     conn.close()
     return embeddings
 
 def save_config_to_db(key: str, value: str) -> None:
-    conn = get_db_connection()
+    conn = get_database_connection()
     cursor = conn.cursor()
     
     cursor.execute(

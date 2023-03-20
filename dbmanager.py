@@ -21,6 +21,7 @@ def clear_database():
     cursor = connection.cursor()
 
     cursor.execute("DELETE FROM chat;")
+    cursor.execute("DELETE FROM embeddings;")
 
     connection.commit()
     cursor.close()

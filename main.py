@@ -23,7 +23,7 @@ from handlers.commandhandler import handle_command
 logging.basicConfig(level=logging.INFO)
 
 promptlayer.api_key = config.PROMPTLAYER_API_KEY #os.environ['PROMPTLAYER_API_KEY']
-openai = promptlayer.openai
+#openai = promptlayer.openai
 
 load_dotenv()
 app = Flask(__name__)
@@ -105,24 +105,16 @@ def process_openai_response(response_text):
 
 @app.route('/wachat', methods=['POST'])
 def wachat():
-  user_phone = request.form.get('From')
-  user_name = request.form.get('ProfileName')
-  user_message = request.form.get('Body')
-  media_url = request.form.get('MediaUrl0')
-  media_type = request.form.get('MediaContentType0')
-  whatsapp_number = request.form.get('To')
-
-  if media_url:
-    if media_type.startswith('audio'):
-      user_message = handle_audio(media_url)
-    elif media_type.startswith('image'):
-      handle_image(media_url)
-    elif media_type.startswith('application'):
-      handle_document(media_url)
+    user_phone = request.form.get('From')
+    user_name = request.form.get('ProfileName')
+    user_message = request.form.get('Body')
+    media_url = request.form.get('MediaUrl0')
+    media_type = request.form.get('MediaContentType0')
+    whatsapp_number = request.form.get('To')
 
     image_url = None
     messages = []
-  
+
     if media_url:
         if media_type.startswith('audio'):
             user_message = handle_audio(media_url)
@@ -140,7 +132,7 @@ def wachat():
         if not len(messages):
             messages = [{"role": "system", "content": initial_prompt}]
             insert_message_to_db(user_phone, twilio_phone_number, "system",
-                                 initial_prompt)
+                                initial_prompt)
 
         # Remove the 'timestamp' field from messages before sending to the API
         for message in messages:
@@ -164,7 +156,7 @@ def wachat():
         twilio_response.message(oai_response)
 
     insert_message_to_db(user_phone, twilio_phone_number, "assistant",
-                         oai_response)
+                            oai_response)
     messages.append({"role": "assistant", "content": oai_response})
 
     return str(twilio_response)

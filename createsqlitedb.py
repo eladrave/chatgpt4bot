@@ -13,11 +13,16 @@ connection.execute("CREATE TABLE IF NOT EXISTS config (id INTEGER PRIMARY KEY AU
 
 #connection.execute("CREATE TABLE IF NOT EXISTS config(key TEXT PRIMARY KEY,value TEXT NOT NULL)")
 
+# Drop the embeddings table if it exists
+connection.execute("DROP TABLE IF EXISTS embeddings")
+
+# Create the embeddings table
 connection.execute("""
     CREATE TABLE IF NOT EXISTS embeddings (
-        id INTEGER PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_phone TEXT NOT NULL,
         text TEXT NOT NULL,
-        embedding TEXT NOT NULL
+        embedding BLOB NOT NULL
     )
 """)
+

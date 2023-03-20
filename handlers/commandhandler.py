@@ -9,13 +9,13 @@ def handle_command(user_phone: str, command: str) -> str:
     if command.lower().startswith("/remember "):
         text_to_remember = command[10:]
         embedding = embed_text(text_to_remember)
-        store_embedding(user_phone, text_to_remember, embedding)
+       # store_embedding(user_phone, text_to_remember, embedding)
         return "I've remembered your message."
       
     elif command.lower().startswith("/recall"):
         query = command[7:].strip()
-        embeddings = get_embeddings(user_phone)
-        return find_similar_text("Find me a text that is similar to this one. "+query, embeddings)
+        #embeddings = get_embeddings(user_phone)
+        return find_similar_text("Find me a text that is similar to this one: "+query)#, embeddings)
       
     elif command.lower().startswith("/config "):
         config_parts = command[8:].split()
