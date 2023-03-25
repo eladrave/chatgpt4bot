@@ -22,6 +22,7 @@ class ConfigHandler:
         self.DB_NAME = config_from_db.get('DB_NAME', os.environ.get('DB_NAME')) if config_from_db else os.environ.get('DB_NAME')
         self.DB_PORT = config_from_db.get('DB_PORT', os.environ.get('DB_PORT')) if config_from_db else os.environ.get('DB_PORT')
         self.DB_PATH = config_from_db.get('DB_PATH', os.environ.get('DB_PATH')) if config_from_db else os.environ.get('DB_PATH')
+        self.ALLOWED_NUMBERS = config_from_db.get('ALLOWED_NUMBERS', os.environ.get('ALLOWED_NUMBERS')) if config_from_db else os.environ.get('ALLOWED_NUMBERS')
 
 def update_config(self, key, value):
         if hasattr(self, key):

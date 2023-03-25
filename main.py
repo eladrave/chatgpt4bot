@@ -33,6 +33,7 @@ openai.api_key = config.OPENAI_API_KEY
 model = config.OPENAI_API_MODEL
 initial_prompt = config.INITIAL_PROMPT
 twilio_phone_number = config.TWILIO_PHONE_NUMBER
+allowed_numbers = config.ALLOWED_NUMBERS.split(",") #("ALLOWED_NUMBERS", "").split(",")
 
 '''
 openai.api_key = os.environ['OPENAI_API_KEY']
@@ -106,6 +107,12 @@ def process_openai_response(response_text):
 @app.route('/wachat', methods=['POST'])
 def wachat():
     user_phone = request.form.get('From')
+    if user_phone not in allowed_numbers:
+        ermsg = "You need to pay Elad some $$$$$ :) "
+        twilio_response = MessagingResponse()
+        twilio_response.message(ermsg)
+        logging.info(f"Invalid number: {user_phone}")
+        return str(twilio_response)
     user_name = request.form.get('ProfileName')
     user_message = request.form.get('Body')
     media_url = request.form.get('MediaUrl0')
